@@ -1,0 +1,25 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "CryptoSwift",
+        "repositoryURL": "https://github.com/krzyzanowskim/CryptoSwift.git",
+        "state": {
+          "branch": null,
+          "revision": "3a2acbb32ab68215ee1596ee6004da8e90c3721b",
+          "version": "1.0.0"
+        }
+      },
+      {
+        "package": "CSocket",
+        "repositoryURL": "https://github.com/adiwajshing/CSocket.git",
+        "state": {
+          "branch": null,
+          "revision": "1675d4d04edd1b25bbbd8842e5794989eeb59d18",
+          "version": "1.0.0"
+        }
+      }
+    ]
+  },
+  "version": 1
+}
