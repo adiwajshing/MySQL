@@ -9,7 +9,14 @@ import Foundation
 
 extension MySQL {
     
-    open class ConnectionPool<T: Connection>: Connectable {
+    open class ConnectionPool<T: MySQL.Connection>: MySQLConnectable {
+        
+        public let address: String
+        public let port: Int32
+        public let username: String
+        public let password: String?
+        public var database: String?
+        
         
         public var connections = [T]()
         
@@ -28,7 +35,15 @@ extension MySQL {
         private var idealConn: T!
         private var sm = DispatchSemaphore(value: 1)
         
-        public override func open() throws {
+        public required init(address: String, port: Int32, username: String, password: String?, database: String?) {
+            self.address = address
+            self.port = port
+            self.username = username
+            self.password = password
+            self.database = database
+        }
+        
+        public func open() throws {
             if connections.count > 0 {
                 return
             }
@@ -47,6 +62,13 @@ extension MySQL {
                 timer.resume()
             }
             
+        }
+        public func close() throws {
+            for connection in connections {
+               try connection.close()
+            }
+            
+            connections.removeAll()
         }
         
         private func refresh () {
@@ -95,18 +117,19 @@ extension MySQL {
             return conn
         }
         
-        public override func query(matrix q: String) throws -> [[String?]] {
-            return try idealConnection().query(matrix: q)
+        public func query(table q: String) throws -> MySQL.Table {
+            return try idealConnection().query(table: q)
         }
-        public override func query(_ q: String, row: ([String?]) -> Void) throws {
-            return try idealConnection().query(q, row: row)
+        public func query(_ q: String, columns: inout MySQL.TableMetaData, row: (MySQL.Row) -> Void) throws {
+            try idealConnection().query(q, columns: &columns, row: row)
         }
-        public override func query(returningNoData queries: String...) throws {
-            return try idealConnection().query(returningNoData: queries)
+
+        public func query(returningNoData q: String) throws -> Int {
+            return try idealConnection().query(returningNoData: q)
         }
         
         private func newConnection () throws -> T {
-            let conn = T.init(address: self.address, port: self.port, user: self.user, password: self.password, dbname: self.dbname)
+            let conn = T.init(address: self.address, port: self.port, username: self.username, password: self.password, database: self.database)
             try conn.open()
             return conn
         }
