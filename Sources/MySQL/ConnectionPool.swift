@@ -117,10 +117,10 @@ extension MySQL {
             return conn
         }
         
-        public func query(table q: String) throws -> MySQL.Table {
+        public func query<T: MySQLRowConvertible> (table q: String) throws -> MySQL.Table<T> {
             return try idealConnection().query(table: q)
         }
-        public func query(_ q: String, columns: inout MySQL.TableMetaData, row: (MySQL.Row) -> Void) throws {
+        public func query<T: MySQLRowConvertible> (_ q: String, columns: inout MySQL.TableMetaData, row: (T) -> Void) throws {
             try idealConnection().query(q, columns: &columns, row: row)
         }
 

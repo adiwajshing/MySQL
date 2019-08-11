@@ -12,7 +12,7 @@ final class MySQLTests: XCTestCase {
     var connection: MySQL.Connection!
     
     override func setUp() {
-        connection = MySQL.Connection(address: "127.0.0.1", port: 3306, username: "root", password: "", database: "")
+        connection = MySQL.Connection(address: "127.0.0.1", port: 3306, username: "root", password: "Garbagepassword123", database: "ludobosslocal")
         
         /*var v: UInt32 = 3345
         let a1 = [UInt8].UInt24Array(v)
@@ -45,9 +45,9 @@ final class MySQLTests: XCTestCase {
     func testSelectQuery () {
         
         openedConnection {
-            let m = try connection.query(table: "SELECT * FROM main LIMIT 2")
+            let m: MySQL.Table<UInt64> = try connection.query(table: "SELECT coins FROM main LIMIT 2")
             
-            print(m)
+            print(m.rows)
             XCTAssertGreaterThan(m.rows.count, 0)
         }
         
@@ -66,7 +66,7 @@ final class MySQLTests: XCTestCase {
         
         openedConnection {
             do {
-                let _ = try connection.query(table: "SELECT * ")
+                let _: MySQL.Table<MySQL.Row> = try connection.query(table: "SELECT * ")
                 XCTFail("should have got error")
             } catch {
                 print("got error: \(error)")

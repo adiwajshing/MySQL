@@ -20,14 +20,14 @@ public protocol MySQLConnectable {
     
     func open() throws
     func close() throws
-    func query (table q: String) throws -> MySQL.Table
-    func query (_ q: String, columns: inout MySQL.TableMetaData, row: (MySQL.Row) -> Void) throws
-    func query (_ q: String, row: (MySQL.Row) -> Void) throws
+    func query <T: MySQLRowConvertible> (table q: String) throws -> MySQL.Table<T>
+    func query <T: MySQLRowConvertible> (_ q: String, columns: inout MySQL.TableMetaData, row: (T) -> Void) throws
+    func query <T: MySQLRowConvertible> (_ q: String, row: (T) -> Void) throws
     func query(returningNoData q: String) throws -> Int
 }
 public extension MySQLConnectable {
     
-    func query (_ q: String, row: (MySQL.Row) -> Void) throws {
+    func query <T: MySQLRowConvertible> (_ q: String, row: (T) -> Void) throws {
         var columns = MySQL.TableMetaData()
         try query(q, columns: &columns, row: row)
     }
@@ -36,9 +36,7 @@ public extension MySQLConnectable {
 public struct MySQL {
     
     static let maxPackAllowed: UInt32 = 16777215
-    
-    public typealias MySQLRow = [String?]
-    
+        
     struct Handshake {
         var proto_version: UInt8?
         var server_version: String?

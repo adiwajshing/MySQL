@@ -7,7 +7,57 @@
 
 import Foundation
 
+public protocol MySQLRowConvertible {
+    init (_ row: MySQL.Row) throws
+    func values () -> [Any?]
+}
+public protocol MySQLSingleValueConvertible: MySQLRowConvertible {
+    init(_ obj: Self)
+}
+extension MySQLSingleValueConvertible {
+    
+    public init (_ row: MySQL.Row) throws {
+        if row.count != 1 {
+            throw MySQL.RowConversionError.rowCountMatchFailed
+        }
+        let item = row[0]!
+        let v: Self? = item.get()
+        
+        if v == nil {
+            throw MySQL.RowConversionError.unexpectedlyFoundNil("expectedType: \(item.dataType), \(item.dataFlags), type: \(Self.Type.self)")
+        }
+        
+        self.init(v!)
+    }
+    
+    public func values() -> [Any?] {
+        return [self]
+    }
+    
+}
+extension String: MySQLSingleValueConvertible {
+
+}
+extension Date: MySQLSingleValueConvertible {
+    public init(_ obj: Date) {
+        self.init(timeInterval: 0, since: obj)
+    }
+    
+}
+extension Int64: MySQLSingleValueConvertible {
+    
+}
+extension UInt64: MySQLSingleValueConvertible {
+    
+}
+
+
 extension MySQL {
+    
+    public enum RowConversionError : Swift.Error {
+        case rowCountMatchFailed
+        case unexpectedlyFoundNil (String)
+    }
     
     /*public static func table <T> (from: T? = nil) -> TableMetaData {
         let mirror = Mirror(reflecting: T.self)
@@ -22,9 +72,10 @@ extension MySQL {
         return columns
     }*/
     
-    public class Table: CustomStringConvertible {
+    
+    public class Table<T: MySQLRowConvertible>: CustomStringConvertible {
         public let columns: TableMetaData
-        public let rows: [Row]
+        public let rows: [T]
         
         public var description: String {
             
@@ -33,8 +84,9 @@ extension MySQL {
             }
             
             let arr = rows.map { (row) -> String in
-                return row.description
+                return "\(row)"
             }
+            
             var str = "Table {\n"
             str += "columns:\n\(carr.joined(separator: ", "))\n"
             str += "rows:\n\(arr.joined(separator: ",\n"))\n"
@@ -45,7 +97,7 @@ extension MySQL {
         init (query: String, conn: MySQLConnectable) throws {
             
             var m = [Column]()
-            var rows = [Row]()
+            var rows = [T]()
             
             try conn.query(query, columns: &m, row: { (row) in
                 rows.append(row)
@@ -109,7 +161,7 @@ extension MySQL {
         }
     }
     
-    public class Row: CustomStringConvertible {
+    public class Row: CustomStringConvertible, MySQLRowConvertible {
         
         fileprivate let columns: [String: Int]
         fileprivate let arr: [Item]
@@ -119,6 +171,15 @@ extension MySQL {
                 return item.description
             }
             return "Row (\(strArr.joined(separator: ", ")))"
+        }
+        
+        public var count: Int {
+            return arr.count
+        }
+        
+        public required init(_ row: MySQL.Row) throws {
+            self.columns = row.columns
+            self.arr = row.arr
         }
         
         init(_ packet: Data, columns: [Column]) {
@@ -155,6 +216,12 @@ extension MySQL {
                 }
                 return nil
             }
+        }
+        
+        public func values() -> [Any?] {
+            return arr.map({ (item) -> Any? in
+                return item.get()
+            })
         }
         
     }

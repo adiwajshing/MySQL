@@ -6,14 +6,15 @@
 //
 
 import Foundation
+import CSocket
 
 public extension MySQL.Connection {
     
-    func query (table q: String) throws -> MySQL.Table {
+    func query <T: MySQLRowConvertible> (table q: String) throws -> MySQL.Table<T> {
         return try MySQL.Table.init(query: q, conn: self)
     }
     
-    func query (_ q: String, columns: inout MySQL.TableMetaData, row: (MySQL.Row) -> Void) throws {
+    func query <T: MySQLRowConvertible> (_ q: String, columns: inout MySQL.TableMetaData, row: (T) -> Void) throws {
         
         if let semiColonIndex = q.firstIndex(of: ";"), q[semiColonIndex] != q.last {
             throw MySQL.Error.tooManyQueries
@@ -29,7 +30,14 @@ public extension MySQL.Connection {
                 while !eof {
                     
                     if let r = try readRow(columns: columns, EOFReached: &eof), !eof {
-                        row(r)
+                        
+                        if T.self == MySQL.Row.self {
+                            row(r as! T)
+                        } else {
+                            let t = try T(r)
+                            row(t)
+                        }
+                        
                     }
                     
                 }
@@ -77,7 +85,11 @@ public extension MySQL.Connection {
                 break
             } catch {
                 
-                if let e = error as? MySQL.Error {
+                if error is CSocket.Error, tries < maxTriesForQuery {
+                    isConnected = false
+                    self.log("socket error: \(error), reconnecting...")
+                    continue
+                } else if let e = error as? MySQL.Error {
                     
                     switch e {
                     case MySQL.Error.error(let code, let str):
@@ -85,10 +97,6 @@ public extension MySQL.Connection {
                     default:
                         break
                     }
-                } else if tries < maxTriesForQuery {
-                    isConnected = false
-                    self.log("socket error: \(error), reconnecting...")
-                    continue
                 }
                 
                 throw error
