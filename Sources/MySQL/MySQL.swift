@@ -22,7 +22,15 @@ public protocol MySQLConnectable {
     func close() throws
     func query (table q: String) throws -> MySQL.Table
     func query (_ q: String, columns: inout MySQL.TableMetaData, row: (MySQL.Row) -> Void) throws
+    func query (_ q: String, row: (MySQL.Row) -> Void) throws
     func query(returningNoData q: String) throws -> Int
+}
+public extension MySQLConnectable {
+    
+    func query (_ q: String, row: (MySQL.Row) -> Void) throws {
+        var columns = MySQL.TableMetaData()
+        try query(q, columns: &columns, row: row)
+    }
 }
 
 public struct MySQL {
