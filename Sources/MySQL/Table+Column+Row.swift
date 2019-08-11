@@ -222,7 +222,7 @@ extension MySQL {
 
         }
         
-        func get <T> () -> T? {
+        public func get <T> () -> T? {
             guard let value = value else {
                 return nil
             }
