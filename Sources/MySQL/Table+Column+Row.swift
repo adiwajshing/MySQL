@@ -42,7 +42,6 @@ extension Date: MySQLSingleValueConvertible {
     public init(_ obj: Date) {
         self.init(timeInterval: 0, since: obj)
     }
-    
 }
 extension Int64: MySQLSingleValueConvertible {
     
@@ -50,7 +49,9 @@ extension Int64: MySQLSingleValueConvertible {
 extension UInt64: MySQLSingleValueConvertible {
     
 }
-
+extension Bool: MySQLSingleValueConvertible {
+    
+}
 
 extension MySQL {
     
@@ -71,7 +72,6 @@ extension MySQL {
         
         return columns
     }*/
-    
     
     public class Table<T: MySQLRowConvertible>: CustomStringConvertible {
         public let columns: TableMetaData
@@ -295,7 +295,7 @@ extension MySQL {
             }
             
             if T.self == Bool.self {
-                return (value as! UInt8 == 1) as? T
+                return (value as! Int8 == 1) as? T
             }
             
             return value as? T

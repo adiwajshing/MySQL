@@ -12,7 +12,7 @@ final class MySQLTests: XCTestCase {
     var connection: MySQL.Connection!
     
     override func setUp() {
-        connection = MySQL.Connection(address: "127.0.0.1", port: 3306, username: "root", password: "Garbagepassword123", database: "ludobosslocal")
+        connection = MySQL.Connection(address: "127.0.0.1", port: 3306, username: "root", password: "Garbagepassword123", database: "default")
         
         /*var v: UInt32 = 3345
         let a1 = [UInt8].UInt24Array(v)
@@ -30,8 +30,12 @@ final class MySQLTests: XCTestCase {
         // results.
     }*/
     func openedConnection (_ work: (() throws -> Void) ) {
+        
         do {
-            try connection.open()
+            if !connection.isConnected {
+                try connection.open()
+            }
+            
             try work()
         } catch {
             XCTFail("error: \(error)")
@@ -42,10 +46,38 @@ final class MySQLTests: XCTestCase {
             print("opened")
         }
     }
-    func testSelectQuery () {
+    func testCreateTable () {
+        openedConnection {
+            _ = try connection.query(returningNoData: """
+                CREATE TABLE IF NOT EXISTS test_table(
+                    test_int INT NOT NULL,
+                    test_bool BOOL NOT NULL,
+                    test_str CHAR(16) NOT NULL,
+                    test_date DATETIME NOT NULL,
+                    test_uint INT UNSIGNED NOT NULL
+                )
+            """)
+        }
+    }
+    func testInsertQuery () {
+        openedConnection {
+            _ = try connection.query(returningNoData: "INSERT INTO test_table VALUES(1, TRUE, 'Hello bro 2', '2019-08-05 12:32:00', 1)")
+        }
+    }
+    func testSelectQueryBool () {
         
         openedConnection {
-            let m: MySQL.Table<UInt64> = try connection.query(table: "SELECT coins FROM main LIMIT 2")
+            let m: MySQL.Table<Bool> = try connection.query(table: "SELECT test_bool FROM test_table")
+            
+            print(m.rows)
+            XCTAssertGreaterThan(m.rows.count, 0)
+        }
+        
+    }
+    func testSelectQueryUInt64 () {
+        
+        openedConnection {
+            let m: MySQL.Table<UInt64> = try connection.query(table: "SELECT test_uint FROM test_table")
             
             print(m.rows)
             XCTAssertGreaterThan(m.rows.count, 0)
@@ -55,10 +87,28 @@ final class MySQLTests: XCTestCase {
     func testUpdateQuery () {
         
         openedConnection {
-            let rows = try connection.query(returningNoData: "UPDATE main SET coins=coins+1 where uuid='Abcd'")
+            let rows = try connection.query(returningNoData: "UPDATE test_table SET test_int=test_int+1")
             
             print("rows affected: \(rows)")
             XCTAssertGreaterThan(rows, 0)
+        }
+        
+    }
+    func testConcurrentQueries () {
+        
+        openedConnection {
+            
+            let functions = [
+                testSelectQueryBool,
+                testSelectQueryUInt64,
+                testUpdateQuery
+            ]
+            
+            DispatchQueue.concurrentPerform(iterations: 100, execute: { (_) in
+                let f = functions[ Int(arc4random()) % functions.count ]
+                f()
+            })
+            
         }
         
     }
@@ -79,6 +129,6 @@ final class MySQLTests: XCTestCase {
     }
 
     static var allTests = [
-        ("testQuery", testSelectQuery),
+        ("testOpen", testOpen),
     ]
 }

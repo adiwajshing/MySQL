@@ -166,11 +166,11 @@ public extension Date
         return dateStringFormatter
     }
     
-    init?(string: String, format: String) {
+    init(string: String, format: String) {
         if let d = Date.mySQLFormatter(format: format).date(from: string) {
             self.init(timeInterval: 0, since: d)
         } else {
-            return nil
+            self.init(timeIntervalSince1970: 0)
         }
     }
     
