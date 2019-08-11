@@ -229,7 +229,7 @@ public extension MySQL.Connection {
     
     internal func writePacket(_ data: inout Data, packnr: Int) throws {
         try writeHeader(UInt32(data.count), pn: UInt8(packnr + 1))
-        socket.sendAsync(data: &data)
+        try socket.sendSync(data: &data)
     }
     
     internal func writeHeader(_ len: UInt32, pn: UInt8) throws {
@@ -237,7 +237,7 @@ public extension MySQL.Connection {
         var ph = Data.data(&v)
         ph[ph.count-1] = pn
         
-        socket.sendAsync(data: &ph)
+        try socket.sendSync(data: &ph)
     }
     
 }
