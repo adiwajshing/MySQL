@@ -112,7 +112,7 @@ extension MySQL {
             let m = connections.map { (c) -> String in
                 return "\(c.accessorCount())"
             }
-            print("accessors: \(m.joined(separator: ", ")) id: \(idealConn.accessorCount())")
+            //print("accessors: \(m.joined(separator: ", ")) id: \(idealConn.accessorCount())")
             return conn
         }
         public func idealConnection () -> T {
