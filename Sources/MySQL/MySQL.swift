@@ -91,10 +91,16 @@ public struct MySQL {
         }
         
         func access () {
-            accessors.set(accessors.get() + 1)
+            accessors.work { (v) in
+                v += 1
+            }
+            sm.wait()
         }
         func release () {
-            accessors.set(accessors.get() - 1)
+            sm.signal()
+            accessors.work { (v) in
+                v -= 1
+            }
         }
         
         func log (_ txt: Any) {

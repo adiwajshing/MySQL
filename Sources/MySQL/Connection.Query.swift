@@ -61,11 +61,9 @@ public extension MySQL.Connection {
     func query(_ q: String, restOfFunction: ((Int) throws -> Void) ) throws {
         
         self.access()
-        sm.wait()
         
         defer {
             self.release()
-            sm.signal()
         }
         
         var tries = 0

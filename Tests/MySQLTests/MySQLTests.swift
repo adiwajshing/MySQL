@@ -9,30 +9,15 @@ final class MySQLTests: XCTestCase {
         let dob: Date
     }
     
-    var connection: MySQL.Connection!
+    var connection: MySQLConnectable!
     
-    override func setUp() {
-        connection = MySQL.Connection(address: "127.0.0.1", port: 3306, username: "root", password: "Garbagepassword123", database: "default")
-        
-        /*var v: UInt32 = 3345
-        let a1 = [UInt8].UInt24Array(v)
-        let a2 = [UInt8](Data.data(&v))
-        
-        
-        print("a1=\(a1)")
-        print("a2=\(a2)")*/
-    }
     
-    /*func testTableFromData() {
-        let c = MySQL.table(from: nil as SampleDataStructure?)
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct
-        // results.
-    }*/
     func openedConnection (_ work: (() throws -> Void) ) {
         
         do {
-            if !connection.isConnected {
+            
+            if connection == nil {
+                connection = MySQL.Connection(address: "127.0.0.1", port: 3306, username: "root", password: "Garbagepassword123", database: "default")
                 try connection.open()
             }
             
@@ -96,19 +81,39 @@ final class MySQLTests: XCTestCase {
     }
     func testConcurrentQueries () {
         
-        openedConnection {
+        self.measure {
             
-            let functions = [
-                testSelectQueryBool,
-                testSelectQueryUInt64,
-                testUpdateQuery
-            ]
+            openedConnection {
+                let functions = [
+                    testSelectQueryBool,
+                    testSelectQueryUInt64,
+                    testUpdateQuery
+                ]
+                
+                DispatchQueue.concurrentPerform(iterations: 100, execute: { (_) in
+                    let f = functions[ Int(arc4random()) % functions.count ]
+                    f()
+                    
+                })
+            }
             
-            DispatchQueue.concurrentPerform(iterations: 100, execute: { (_) in
-                let f = functions[ Int(arc4random()) % functions.count ]
-                f()
-            })
+        }
+        
+    }
+    func testConcurrentQueriesPool () {
+        
+        do {
+            let pool = MySQL.ConnectionPool(address: "127.0.0.1", port: 3306, username: "root", password: "Garbagepassword123", database: "default")
+            pool.refreshIdealConnectionPeriodically = false
+            pool.passAccessorThreshhold = 1
+            pool.refreshIntervalSeconds = 0.05
             
+            connection = pool
+            
+            try connection.open()
+            testConcurrentQueries()
+        } catch {
+            XCTFail("error: \(error)")
         }
         
     }

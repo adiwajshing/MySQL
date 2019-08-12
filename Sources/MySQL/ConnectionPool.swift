@@ -67,8 +67,11 @@ extension MySQL {
             for connection in connections {
                try connection.close()
             }
-            
+            if refreshIdealConnectionPeriodically {
+                timer.suspend()
+            }
             connections.removeAll()
+            
         }
         
         private func refresh () {
@@ -84,12 +87,12 @@ extension MySQL {
             var conn = connections[0]
             for c in connections {
                 
-                if c.accessorCount() < passAccessorThreshhold {
-                    break
-                }
-                
                 if c.accessorCount() < conn.accessorCount() {
                     conn = c
+                }
+                
+                if conn.accessorCount() < passAccessorThreshhold {
+                    break
                 }
             }
             
@@ -105,6 +108,11 @@ extension MySQL {
             }
             
             idealConn = conn
+            
+            let m = connections.map { (c) -> String in
+                return "\(c.accessorCount())"
+            }
+            print("accessors: \(m.joined(separator: ", ")) id: \(idealConn.accessorCount())")
             return conn
         }
         public func idealConnection () -> T {
