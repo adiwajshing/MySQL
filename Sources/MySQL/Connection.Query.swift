@@ -31,13 +31,18 @@ public extension MySQL.Connection {
                     
                     if let r = try readRow(columns: columns, EOFReached: &eof), !eof {
                         
-                        if T.self == MySQL.Row.self {
-                            row(r as! T)
-                        } else {
-                            let t = try T(r)
-                            row(t)
+                        do {
+                            if T.self == MySQL.Row.self {
+                                row(r as! T)
+                            } else {
+                                let t = try T(r)
+                                row(t)
+                            }
+                        } catch {
+                            try readUntilEOF()
+                            throw error
                         }
-                        
+
                     }
                     
                 }
@@ -108,15 +113,16 @@ public extension MySQL.Connection {
         
         var columns = [MySQL.Column](reserveCapacity: count)
         
+        var data = try readPacket()
         for _ in 0..<count {
-            let data = try readPacket()
             let column = try MySQL.Column(data)
             columns.append(column)
+            
+            data = try readPacket()
         }
         
-        let data = try readPacket()
         //EOF Packet
-        if data[0] != 0xfe && (data.count != 5 || data.count != 1) {
+        if !isEOFPacket(data: &data) {
             throw MySQL.Error.dataReadingError
         }
         
@@ -126,9 +132,9 @@ public extension MySQL.Connection {
         
         EOFReached = false
         
-        let data = try readPacket()
+        var data = try readPacket()
         
-        if (data[0] == 0xfe) && (data.count == 5) {
+        if isEOFPacket(data: &data) {
             
             let flags: UInt16 = Data(data[3..<5]).toObject()
             
@@ -145,6 +151,9 @@ public extension MySQL.Connection {
         
         let row = MySQL.Row(data, columns: columns)
         return row
+    }
+    internal func isEOFPacket (data: inout Data) -> Bool {
+        return (data[0] == 0xfe) && (data.count == 5 || data.count == 1)
     }
     
 }

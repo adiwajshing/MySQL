@@ -49,12 +49,22 @@ final class MySQLTests: XCTestCase {
             _ = try connection.query(returningNoData: "INSERT INTO test_table VALUES(1, TRUE, 'Hello bro 2', '2019-08-05 12:32:00', 1)")
         }
     }
+    func testSelectQueryMisc () {
+        
+        openedConnection {
+            let m: MySQL.Table<MySQL.Row> = try connection.query(table: "SELECT * FROM test_table")
+            
+            print("rows=\(m.rows.count)")
+            XCTAssertGreaterThan(m.rows.count, 0)
+        }
+        
+    }
     func testSelectQueryBool () {
         
         openedConnection {
             let m: MySQL.Table<Bool> = try connection.query(table: "SELECT test_bool FROM test_table")
             
-            print(m.rows)
+            print("rows=\(m.rows.count)")
             XCTAssertGreaterThan(m.rows.count, 0)
         }
         
@@ -85,15 +95,15 @@ final class MySQLTests: XCTestCase {
             
             openedConnection {
                 let functions = [
+                    //testInsertQuery,
+                    testSelectQueryMisc,
                     testSelectQueryBool,
-                    testSelectQueryUInt64,
                     testUpdateQuery
                 ]
                 
                 DispatchQueue.concurrentPerform(iterations: 100, execute: { (_) in
                     let f = functions[ Int(arc4random()) % functions.count ]
                     f()
-                    
                 })
             }
             

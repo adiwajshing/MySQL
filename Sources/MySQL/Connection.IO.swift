@@ -200,10 +200,19 @@ public extension MySQL.Connection {
         
         var data = try readPacket()
         if let num = try readResult(data: &data) {
+            
+           /* while data.first != 0xfe {
+                if data.first == 0xff {
+                    throw handleErrorPacket(data)
+                }
+                print("\([UInt8](data))")
+                data = try readPacket()
+            }*/
             return -Int(num) // set the rows affected as a negative number
         }
         
         var l = 0
+        print([UInt8](data))
         let num = MySQL.Utils.lenEncInt(data, stride: &l) //column count
         
         guard let numColumns = num, l == data.count else {

@@ -78,41 +78,45 @@ extension MySQL {
             _ = computeIdealConnection()
         }
         private func computeIdealConnection () -> T {
-            defer {
+           defer {
                 sm.signal()
             }
             
             sm.wait()
             
             var conn = connections[0]
-            for c in connections {
+            var i = 0
+            
+            while i < connections.count {
                 
-                if c.accessorCount() < conn.accessorCount() {
-                    conn = c
+                if connections[i].accessorCount() < conn.accessorCount() {
+                    conn = connections[i]
                 }
                 
                 if conn.accessorCount() < passAccessorThreshhold {
                     break
                 }
+                i+=1
             }
             
             if conn.accessorCount() > maxAccessors && connections.count < maxOpenConnections {
-                
+              //  sm.wait()
                 for _ in 0..<connectionsToAdd {
                     if let cConn = try? newConnection() {
                         connections.append(cConn)
                         conn = cConn
                     }
                 }
+               // sm.signal()
                 
             }
             
             idealConn = conn
             
-            let m = connections.map { (c) -> String in
+           /* let m = connections.map { (c) -> String in
                 return "\(c.accessorCount())"
             }
-            //print("accessors: \(m.joined(separator: ", ")) id: \(idealConn.accessorCount())")
+            print("accessors: \(m.joined(separator: ", ")) id: \(idealConn.accessorCount())")*/
             return conn
         }
         public func idealConnection () -> T {
