@@ -212,7 +212,7 @@ public extension MySQL.Connection {
         }
         
         var l = 0
-        print([UInt8](data))
+     //   print([UInt8](data))
         let num = MySQL.Utils.lenEncInt(data, stride: &l) //column count
         
         guard let numColumns = num, l == data.count else {
