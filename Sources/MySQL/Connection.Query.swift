@@ -92,14 +92,6 @@ public extension MySQL.Connection {
                     isConnected = false
                     self.log("socket error: \(error), reconnecting...")
                     continue
-                } else if let e = error as? MySQL.Error {
-                    
-                    switch e {
-                    case MySQL.Error.error(let code, let str):
-                        throw MySQL.Error.errorFromQuery(q, code, str)
-                    default:
-                        break
-                    }
                 }
                 
                 throw error
@@ -115,7 +107,7 @@ public extension MySQL.Connection {
         
         var data = try readPacket()
         for _ in 0..<count {
-            let column = try MySQL.Column(data)
+            let column = try MySQL.Column(data, index: columns.count)
             columns.append(column)
             
             data = try readPacket()

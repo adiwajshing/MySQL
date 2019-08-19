@@ -49,7 +49,6 @@ public struct MySQL {
     
     public enum Error : Swift.Error {
         case error(Int, String)
-        case errorFromQuery(String, Int, String)
         case dataReadingError
         case wrongHandshake
         case tooManyQueries

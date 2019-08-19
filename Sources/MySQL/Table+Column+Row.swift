@@ -73,6 +73,8 @@ extension MySQL {
         return columns
     }*/
     
+    public typealias MySQLTable = Table<MySQL.Row>
+    
     public class Table<T: MySQLRowConvertible>: CustomStringConvertible {
         public let columns: TableMetaData
         public let rows: [T]
@@ -112,11 +114,11 @@ extension MySQL {
     
     public class Column: CustomStringConvertible {
         
-        let name: String
-        let dataType: MySQL.DataType
-        let flags: MySQL.FieldFlag
+        public let name: String
+        public let dataType: MySQL.DataType
+        public let flags: MySQL.FieldFlag
         
-        let table: String
+        public let table: String
         
         public var description: String {
             return "Column(\(name) => \(dataType))"
@@ -129,16 +131,13 @@ extension MySQL {
             self.table = ""
         }
         
-        internal init (_ packet: Data) throws {
+        internal init (_ packet: Data, index: Int) throws {
             var pos = 0
             MySQL.Utils.skipLenEncStr(packet, stride: &pos)
             MySQL.Utils.skipLenEncStr(packet, stride: &pos) // Database [len coded string]
             
             var name = MySQL.Utils.lenEncStr(packet, stride: &pos) // Table [len coded string]
-            if name == nil {
-                throw MySQL.Error.dataReadingError
-            }
-            self.table = name!
+            self.table = name ?? "UNKNOWN"
             
             MySQL.Utils.skipLenEncStr(packet, stride: &pos) // Original table [len coded string]
             
@@ -146,7 +145,7 @@ extension MySQL {
             if name == nil {
                 throw MySQL.Error.dataReadingError
             }
-            self.name = name!
+            self.name = name ?? "unknown_column_\(index)"
             
             MySQL.Utils.skipLenEncStr(packet, stride: &pos) // Original name [len coded string]
             pos += 1 + 2 + 4 //Things I haven't bothered about
