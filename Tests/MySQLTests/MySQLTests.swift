@@ -46,13 +46,23 @@ final class MySQLTests: XCTestCase {
     }
     func testInsertQuery () {
         openedConnection {
-            _ = try connection.query(returningNoData: "INSERT INTO test_table VALUES(1, TRUE, 'Hello bro 2', '2019-08-05 12:32:00', 1)")
+            _ = try connection.query(returningNoData: "INSERT INTO test_table VALUES(5, TRUE, '', '2019-08-05 12:32:00', 1)")
         }
     }
     func testSelectQueryMisc () {
         
         openedConnection {
             let m: MySQL.Table<MySQL.Row> = try connection.query(table: "SELECT * FROM test_table")
+            
+            print("rows=\(m.rows.count)")
+            XCTAssertGreaterThan(m.rows.count, 0)
+        }
+        
+    }
+    func testSelectQueryString () {
+        
+        openedConnection {
+            let m: MySQL.Table<String> = try connection.query(table: "SELECT test_str FROM test_table WHERE test_int=5")
             
             print("rows=\(m.rows.count)")
             XCTAssertGreaterThan(m.rows.count, 0)

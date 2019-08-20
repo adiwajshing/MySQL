@@ -238,7 +238,20 @@ extension MySQL {
             self.dataFlags = column.flags
             
             if strValue == nil {
-                self.value = nil
+                
+                if self.dataFlags.contains(.notNull) {
+                    switch dataType {
+                    case .varString, .varChar, .string:
+                        value = ""
+                        break
+                    default:
+                        value = nil
+                        break
+                    }
+                } else {
+                    self.value = nil
+                }
+            
             } else {
                 switch dataType {
                 case .varString, .varChar, .string:
