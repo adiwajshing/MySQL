@@ -142,9 +142,6 @@ extension MySQL {
             MySQL.Utils.skipLenEncStr(packet, stride: &pos) // Original table [len coded string]
             
             name = MySQL.Utils.lenEncStr(packet, stride: &pos) // Name of column
-            if name == nil {
-                throw MySQL.Error.dataReadingError
-            }
             self.name = name ?? "unknown_column_\(index)"
             
             MySQL.Utils.skipLenEncStr(packet, stride: &pos) // Original name [len coded string]
