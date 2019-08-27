@@ -79,6 +79,16 @@ final class MySQLTests: XCTestCase {
         }
         
     }
+    func testSelectQueryDate () {
+        
+        openedConnection {
+            let m: MySQL.Table<Date> = try connection.query(table: "SELECT test_date FROM test_table LIMIT 1")
+            
+            print(m.rows)
+            XCTAssertGreaterThan(m.rows.count, 0)
+        }
+        
+    }
     func testSelectQueryUInt64 () {
         
         openedConnection {

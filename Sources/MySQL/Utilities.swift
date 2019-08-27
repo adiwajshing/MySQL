@@ -154,9 +154,9 @@ public extension Data {
 
 public extension Date
 {
-    static let sqlDateTimeFormat = "yyyy-MM-dd hh:mm:ss"
+    static let sqlDateTimeFormat = "yyyy-MM-dd HH:mm:ss"
     static let sqlDateFormat = "yyyy-MM-dd"
-    static let sqlTimeFormat = "hh:mm:ss"
+    static let sqlTimeFormat = "HH:mm:ss"
     static let sqlYearFormat = "yyyy"
     
     static func mySQLFormatter (format: String) -> DateFormatter{
