@@ -111,7 +111,7 @@ final class MySQLTests: XCTestCase {
                     testUpdateQuery
                 ]
                 
-                DispatchQueue.concurrentPerform(iterations: 100, execute: { (_) in
+                DispatchQueue.concurrentPerform(iterations: 50, execute: { (_) in
                     let f = functions[ Int(arc4random()) % functions.count ]
                     f()
                 })

@@ -83,6 +83,7 @@ public struct MySQL {
             self.socket = try! CSocket(host: address, port: port)
             self.socket.connectTimeout = 5.0
             self.socket.readTimeout = 5.0
+            self.socket.sendTimeout = 5.0
         }
         
         public func accessorCount () -> Int {
